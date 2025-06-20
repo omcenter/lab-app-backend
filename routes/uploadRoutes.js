@@ -9,7 +9,7 @@ const upload = multer({ dest: 'uploads/' });
 router.post('/upload-report', upload.fields([
   { name: 'report', maxCount: 1 },
   { name: 'invoice', maxCount: 1 }
-]), async (req, res) => {
+]), async (req, res) => {  
   try {
     const { mobile, testName } = req.body;
     const report = req.files?.report?.[0];
