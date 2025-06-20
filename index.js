@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import '../styles/home.css';
 import { Link } from 'react-router-dom';
 import Footer from '../components/Footer';
+import '../styles/home.css';
 
-const HomePage = () => {
+const IndexPage = () => {
   const [time, setTime] = useState(new Date().toLocaleTimeString());
   const [showWelcome, setShowWelcome] = useState(true);
   const [suggestion, setSuggestion] = useState({ name: '', phone: '', message: '' });
 
-  // ⏰ Update time every second
+  // 🕒 Update time every second
   useEffect(() => {
     const timer = setInterval(() => {
       setTime(new Date().toLocaleTimeString());
@@ -16,13 +16,13 @@ const HomePage = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // ✨ Show welcome animation for 2 seconds
+  // 🎉 Hide welcome after 2s
   useEffect(() => {
     const timer = setTimeout(() => setShowWelcome(false), 2000);
     return () => clearTimeout(timer);
   }, []);
 
-  // 📩 Handle suggestion form submission
+  // 📬 Submit suggestion
   const handleSubmit = (e) => {
     e.preventDefault();
     fetch('https://lab-app-backend.onrender.com/submit-suggestion', {
@@ -30,13 +30,14 @@ const HomePage = () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(suggestion),
     })
-      .then(() => alert('Suggestion submitted!'))
-      .catch(() => alert('Error submitting suggestion'));
+      .then(() => alert('✅ Suggestion submitted!'))
+      .catch(() => alert('❌ Error submitting suggestion'));
     setSuggestion({ name: '', phone: '', message: '' });
   };
 
   return (
     <div className="home-container">
+      {/* Welcome Animation */}
       {showWelcome && (
         <div className="welcome-animation">
           <h1>Welcome to Om Diagnostic Center</h1>
@@ -44,9 +45,10 @@ const HomePage = () => {
         </div>
       )}
 
+      {/* Heading */}
       <h2 className="headline">Welcome to Om Diagnostic Center</h2>
 
-      {/* Navigation to 4 routes */}
+      {/* Navigation Cards */}
       <div className="card-container">
         <Link to="/doctor" className="card">Doctor</Link>
         <Link to="/agent" className="card">Lab Agent</Link>
@@ -54,7 +56,7 @@ const HomePage = () => {
         <Link to="/patient" className="card">Patient</Link>
       </div>
 
-      {/* Suggestion Form */}
+      {/* Suggestion Box */}
       <form className="suggestion-box" onSubmit={handleSubmit}>
         <h3>Suggestion Box</h3>
         <input
@@ -78,7 +80,7 @@ const HomePage = () => {
         <button type="submit">Submit</button>
       </form>
 
-      {/* WhatsApp Floating Button */}
+      {/* WhatsApp Button */}
       <a
         href="https://wa.me/918882447570"
         className="whatsapp-float"
@@ -88,10 +90,10 @@ const HomePage = () => {
         💬 Chat
       </a>
 
-      {/* Footer on every page */}
+      {/* Footer */}
       <Footer />
     </div>
   );
 };
 
-export default HomePage;
+export default IndexPage;
