@@ -38,6 +38,33 @@ app.get('/api/tests', (req, res) => {
   res.json(data.tests);
 });
 
+app.get('/api/reports/:mobile', (req, res) => {
+  const { mobile } = req.params;
+
+  // Dummy reports for now — later fetch from DB or uploads
+  const reports = [
+    {
+      mobile: '8888888888',
+      testName: 'Blood Test',
+      date: '2025-06-15',
+      reportUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+      invoiceUrl: 'https://www.orimi.com/pdf-test.pdf'
+    },
+    {
+      mobile: '8888888888',
+      testName: 'X-Ray',
+      date: '2025-06-10',
+      reportUrl: 'https://www.africau.edu/images/default/sample.pdf',
+      invoiceUrl: 'https://www.orimi.com/pdf-test.pdf'
+    }
+  ];
+
+  // Filter by mobile number
+  const patientReports = reports.filter(r => r.mobile === mobile);
+
+  res.json(patientReports);
+});
+
 // ✅ SUGGESTION FORM ROUTE
 app.post('/submit-suggestion', (req, res) => {
   const { name, phone, message } = req.body;
