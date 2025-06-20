@@ -4,11 +4,11 @@ const path = require('path');
 const PDFDocument = require('pdfkit');
 const moment = require('moment');
 const router = express.Router();
+const uploadToDrive = require('../googleDrive');
 
-// Path to counter file
 const counterFile = path.join(__dirname, '../data/invoice_counter.json');
 
-// Helper to get next invoice ID
+// Get next invoice number
 function getNextInvoiceId() {
   const data = JSON.parse(fs.readFileSync(counterFile, 'utf-8'));
   data.current += 1;
@@ -23,22 +23,15 @@ router.post('/submit', async (req, res) => {
     return res.status(400).json({ message: 'No tests provided' });
   }
 
-  const doc = new PDFDocument({ size: 'A4', margin: 40 });
-  const chunks = [];
-
-  doc.on('data', chunk => chunks.push(chunk));
-  doc.on('end', () => {
-    const pdfBuffer = Buffer.concat(chunks);
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename=receipt.pdf');
-    res.send(pdfBuffer);
-  });
-
   const invoiceId = getNextInvoiceId();
   const dateStr = moment().format('DD-MM-YYYY');
   const timeStr = moment().format('HH:mm');
 
-  // Helper to draw a slip section (top or bottom)
+  const tempFilePath = path.join(__dirname, `../uploads/${invoiceId}.pdf`);
+  const doc = new PDFDocument({ size: 'A4', margin: 40 });
+  const writeStream = fs.createWriteStream(tempFilePath);
+  doc.pipe(writeStream);
+
   function drawSlip(yOffset, hideAmount = false) {
     doc.font('Helvetica-Bold').fontSize(16).text('OM Diagnostic Center', 0, yOffset, { align: 'center' });
     doc.font('Helvetica').fontSize(11).text(`Referred to: ${lab}`, 40, yOffset + 30);
@@ -88,13 +81,40 @@ router.post('/submit', async (req, res) => {
     }
   }
 
-  // Draw original (upper half with price)
-  drawSlip(40, false);
-
-  // Draw duplicate (lower half without price)
-  drawSlip(430, true);
-
+  drawSlip(40, false);   // Original copy
+  drawSlip(430, true);   // Duplicate copy
   doc.end();
+
+  writeStream.on('finish', async () => {
+    try {
+      const folderId = 'YOUR_GOOGLE_DRIVE_FOLDER_ID'; // Replace this
+      const fakeFile = {
+        originalname: `${invoiceId}.pdf`,
+        mimetype: 'application/pdf',
+        path: tempFilePath,
+      };
+
+      const fileId = await uploadToDrive(fakeFile, folderId);
+
+      fs.unlinkSync(tempFilePath); // Remove file from server
+
+      const driveLink = `https://drive.google.com/file/d/${fileId}/view?usp=sharing`;
+
+      res.json({
+        message: 'Invoice generated and uploaded to Google Drive',
+        invoiceId,
+        driveLink,
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to upload to Drive' });
+    }
+  });
+
+  writeStream.on('error', (err) => {
+    console.error('PDF write failed:', err);
+    res.status(500).json({ message: 'PDF generation failed' });
+  });
 });
 
 module.exports = router;
