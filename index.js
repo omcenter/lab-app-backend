@@ -1,99 +1,45 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import Footer from '../components/Footer';
-import '../styles/home.css';
+const express = require('express');
+const cors = require('cors');
+const nodemailer = require('nodemailer');
+const dotenv = require('dotenv');
+const path = require('path');
 
-const IndexPage = () => {
-  const [time, setTime] = useState(new Date().toLocaleTimeString());
-  const [showWelcome, setShowWelcome] = useState(true);
-  const [suggestion, setSuggestion] = useState({ name: '', phone: '', message: '' });
+dotenv.config();
 
-  // 🕒 Update time every second
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTime(new Date().toLocaleTimeString());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+const app = express();
 
-  // 🎉 Hide welcome after 2s
-  useEffect(() => {
-    const timer = setTimeout(() => setShowWelcome(false), 2000);
-    return () => clearTimeout(timer);
-  }, []);
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-  // 📬 Submit suggestion
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    fetch('https://lab-app-backend.onrender.com/submit-suggestion', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(suggestion),
-    })
-      .then(() => alert('✅ Suggestion submitted!'))
-      .catch(() => alert('❌ Error submitting suggestion'));
-    setSuggestion({ name: '', phone: '', message: '' });
-  };
+// Route Imports
+const doctorRoutes = require('./routes/doctorRoutes');
+const agentRoutes = require('./routes/agentRoutes');
+const labRoutes = require('./routes/labRoutes');
+const testRoutes = require('./routes/testRoutes');
+const uploadRoutes = require('./routes/uploadRoutes'); // ✅ New upload route
+const data = require('./data'); // Dropdown data
 
-  return (
-    <div className="home-container">
-      {/* Welcome Animation */}
-      {showWelcome && (
-        <div className="welcome-animation">
-          <h1>Welcome to Om Diagnostic Center</h1>
-          <p style={{ textAlign: 'center', marginBottom: '10px' }}>🕒 {time}</p>
-        </div>
-      )}
+// Route Setup
+app.use('/api/doctor', doctorRoutes);
+app.use('/api/agent', agentRoutes);
+app.use('/api/lab', labRoutes);
+app.use('/api/tests', testRoutes);
+app.use('/api', uploadRoutes); // ✅ Upload route (for test reports)
 
-      {/* Heading */}
-      <h2 className="headline">Welcome to Om Diagnostic Center</h2>
+// Dropdown Data APIs
+app.get('/api/doctors', (req, res) => res.json(data.doctors));
+app.get('/api/agents', (req, res) => res.json(data.agents));
+app.get('/api/tests', (req, res) => res.json(data.tests));
 
-      {/* Navigation Cards */}
-      <div className="card-container">
-        <Link to="/doctor" className="card">Doctor</Link>
-        <Link to="/agent" className="card">Lab Agent</Link>
-        <Link to="/lab" className="card">Lab</Link>
-        <Link to="/patient" className="card">Patient</Link>
-      </div>
+// Home Route
+app.get('/', (req, res) => {
+  res.send('✅ Om Diagnostic Center API is running!');
+});
 
-      {/* Suggestion Box */}
-      <form className="suggestion-box" onSubmit={handleSubmit}>
-        <h3>Suggestion Box</h3>
-        <input
-          type="text"
-          placeholder="Your Name (optional)"
-          value={suggestion.name}
-          onChange={(e) => setSuggestion({ ...suggestion, name: e.target.value })}
-        />
-        <input
-          type="text"
-          placeholder="Phone Number (optional)"
-          value={suggestion.phone}
-          onChange={(e) => setSuggestion({ ...suggestion, phone: e.target.value })}
-        />
-        <textarea
-          placeholder="Your Suggestion"
-          required
-          value={suggestion.message}
-          onChange={(e) => setSuggestion({ ...suggestion, message: e.target.value })}
-        ></textarea>
-        <button type="submit">Submit</button>
-      </form>
-
-      {/* WhatsApp Button */}
-      <a
-        href="https://wa.me/918882447570"
-        className="whatsapp-float"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        💬 Chat
-      </a>
-
-      {/* Footer */}
-      <Footer />
-    </div>
-  );
-};
-
-export default IndexPage;
+// Server Listen
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, () => {
+  console.log(`✅ Server running at http://localhost:${PORT}`);
+});
