@@ -9,7 +9,7 @@ const upload = multer({ dest: 'uploads/' });
 router.post('/upload-report', upload.fields([
   { name: 'report', maxCount: 1 },
   { name: 'invoice', maxCount: 1 }
-]), async (req, res) => {  
+]), async (req, res) => {
   try {
     const { mobile, testName } = req.body;
     const report = req.files?.report?.[0];
@@ -22,12 +22,13 @@ router.post('/upload-report', upload.fields([
     const reportLink = await uploadToDrive(report.path, `Report-${mobile}-${testName}.pdf`);
     const invoiceLink = await uploadToDrive(invoice.path, `Invoice-${mobile}-${testName}.pdf`);
 
+    // Cleanup temp files
     fs.unlinkSync(report.path);
     fs.unlinkSync(invoice.path);
 
     res.status(200).send(`✅ Uploaded successfully!\nReport: ${reportLink}\nInvoice: ${invoiceLink}`);
   } catch (err) {
-    console.error(err);
+    console.error('❌ Upload error:', err);
     res.status(500).send('❌ Upload failed.');
   }
 });
