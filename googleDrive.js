@@ -1,9 +1,12 @@
 const fs = require('fs');
 const { google } = require('googleapis');
+const path = require('path');
 
-const KEYFILEPATH = './drive-key.json';
+// Load service account credentials
+const KEYFILEPATH = path.join(__dirname, 'credentials.json'); // <-- make sure this file exists
 const SCOPES = ['https://www.googleapis.com/auth/drive.file'];
 
+// Authenticate with Google Drive
 const auth = new google.auth.GoogleAuth({
   keyFile: KEYFILEPATH,
   scopes: SCOPES,
@@ -11,25 +14,31 @@ const auth = new google.auth.GoogleAuth({
 
 const driveService = google.drive({ version: 'v3', auth });
 
-async function uploadToDrive(file, folderId) {
+// Upload file function
+async function uploadToDrive(filePath, fileName) {
   const fileMetadata = {
-    name: file.originalname,
-    parents: [folderId],
+    name: fileName,
+    parents: ['YOUR_FOLDER_ID'], // ⬅️ Replace with your actual Google Drive folder ID
   };
 
   const media = {
-    mimeType: file.mimetype,
-    body: fs.createReadStream(file.path),
+    mimeType: 'application/pdf',
+    body: fs.createReadStream(filePath),
   };
 
-  const response = await driveService.files.create({
-    resource: fileMetadata,
-    media: media,
-    fields: 'id',
-  });
+  try {
+    const response = await driveService.files.create({
+      resource: fileMetadata,
+      media,
+      fields: 'id, webViewLink, webContentLink',
+    });
 
-  fs.unlinkSync(file.path); // delete after upload
-  return response.data.id;
+    const { webViewLink } = response.data;
+    return webViewLink;
+  } catch (err) {
+    console.error('❌ Google Drive upload failed:', err.message);
+    throw err;
+  }
 }
 
 module.exports = uploadToDrive;
