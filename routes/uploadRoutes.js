@@ -1,11 +1,10 @@
 const express = require('express');
 const multer = require('multer');
-const uploadToDrive = require('../googleDrive'); // Make sure this file exists
+const uploadToDrive = require('../googleDrive');
 const fs = require('fs');
-const path = require('path');
 
 const router = express.Router();
-const upload = multer({ dest: 'uploads/' }); // Uploads folder must exist
+const upload = multer({ dest: 'uploads/' });
 
 router.post('/upload-report', upload.fields([
   { name: 'report', maxCount: 1 },
@@ -20,18 +19,16 @@ router.post('/upload-report', upload.fields([
       return res.status(400).send('Both report and invoice are required.');
     }
 
-    // Upload to Google Drive
     const reportLink = await uploadToDrive(report.path, `Report-${mobile}-${testName}.pdf`);
     const invoiceLink = await uploadToDrive(invoice.path, `Invoice-${mobile}-${testName}.pdf`);
 
-    // Clean up local files
     fs.unlinkSync(report.path);
     fs.unlinkSync(invoice.path);
 
     res.status(200).send(`✅ Uploaded successfully!\nReport: ${reportLink}\nInvoice: ${invoiceLink}`);
   } catch (err) {
-    console.error('❌ Upload failed:', err);
-    res.status(500).send('Upload failed.');
+    console.error(err);
+    res.status(500).send('❌ Upload failed.');
   }
 });
 
