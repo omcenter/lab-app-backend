@@ -18,7 +18,7 @@ const driveService = google.drive({ version: 'v3', auth });
 async function uploadToDrive(filePath, fileName) {
   const fileMetadata = {
     name: fileName,
-    parents: ['YOUR_FOLDER_ID'], // ⬅️ Replace with your actual Google Drive folder ID
+    parents: ['1yBEddjiTwAPXTw5KdnYKWm7zK6_HldjU'], // ⬅️ Replace with your actual Google Drive folder ID
   };
 
   const media = {
