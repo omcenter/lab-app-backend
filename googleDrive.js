@@ -1,24 +1,37 @@
 const fs = require('fs');
-const { google } = require('googleapis');
 const path = require('path');
+const { google } = require('googleapis');
 
-// Load service account credentials
-const KEYFILEPATH = path.join(__dirname, 'credentials.json'); // <-- make sure this file exists
+// ✅ Google Drive Setup
+const KEYFILEPATH = path.join(__dirname, 'credentials.json');
 const SCOPES = ['https://www.googleapis.com/auth/drive.file'];
 
-// Authenticate with Google Drive
+if (!fs.existsSync(KEYFILEPATH)) {
+  console.error('❌ Missing credentials.json. Upload it to backend directory.');
+  process.exit(1); // Stop server if credentials missing
+}
+
 const auth = new google.auth.GoogleAuth({
   keyFile: KEYFILEPATH,
   scopes: SCOPES,
 });
 
-const driveService = google.drive({ version: 'v3', auth });
+let driveService;
 
-// Upload file function
+(async () => {
+  const authClient = await auth.getClient();
+  driveService = google.drive({ version: 'v3', auth: authClient });
+})();
+
+// ✅ Upload Function
 async function uploadToDrive(filePath, fileName) {
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`❌ File not found: ${filePath}`);
+  }
+
   const fileMetadata = {
     name: fileName,
-    parents: ['1yBEddjiTwAPXTw5KdnYKWm7zK6_HldjU'], // ⬅️ Replace with your actual Google Drive folder ID
+    parents: ['1yBEddjiTwAPXTw5KdnYKWm7zK6_HldjU'], // ✅ Your actual folder ID
   };
 
   const media = {
@@ -30,11 +43,22 @@ async function uploadToDrive(filePath, fileName) {
     const response = await driveService.files.create({
       resource: fileMetadata,
       media,
-      fields: 'id, webViewLink, webContentLink',
+      fields: 'id, webViewLink',
     });
 
-    const { webViewLink } = response.data;
-    return webViewLink;
+    const fileId = response.data.id;
+
+    // ✅ Make file public
+    await driveService.permissions.create({
+      fileId,
+      requestBody: {
+        role: 'reader',
+        type: 'anyone',
+      },
+    });
+
+    const publicLink = `https://drive.google.com/file/d/${fileId}/view`;
+    return publicLink;
   } catch (err) {
     console.error('❌ Google Drive upload failed:', err.message);
     throw err;
