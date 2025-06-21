@@ -3,7 +3,7 @@ const path = require('path');
 const { google } = require('googleapis');
 
 // ✅ Google Drive Setup
-const KEYFILEPATH = path.join(__dirname, 'credentials.json');
+const KEYFILEPATH = '/etc/secrets/credentials.json';
 const SCOPES = ['https://www.googleapis.com/auth/drive.file'];
 
 if (!fs.existsSync(KEYFILEPATH)) {
