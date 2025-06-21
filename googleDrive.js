@@ -31,7 +31,6 @@ async function uploadToDrive(filePath, fileName) {
 
   const fileMetadata = {
     name: fileName,
-    parents: ['1yBEddjiTwAPXTw5KdnYKWm7zK6_HldjU'], // ✅ Your actual folder ID
   };
 
   const media = {
