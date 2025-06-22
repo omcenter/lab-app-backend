@@ -2,13 +2,11 @@ const express = require('express');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
 const path = require('path');
-const mongoose = require('mongoose');
 
 const app = express();
 
-// ✅ MongoDB connection (without .env)
+// ✅ MongoDB connection
 const MONGO_URI = "mongodb+srv://omdiagnosticcenterdelhi:<your_password>@labapp.6gei66t.mongodb.net/labApp?retryWrites=true&w=majority&appName=labApp";
-
 mongoose.connect(MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
@@ -26,22 +24,24 @@ const doctorRoutes = require('./routes/doctorRoutes');
 const agentRoutes = require('./routes/agentRoutes');
 const labRoutes = require('./routes/labRoutes');
 const testRoutes = require('./routes/testRoutes');
-const uploadRoutes = require('./routes/uploadRoutes'); // ✅ Upload route
-const data = require('./data'); // Dropdown data
+const uploadRoutes = require('./routes/uploadRoutes');
+const reportRoutes = require('./routes/reportRoutes'); // ✅ New route
+const data = require('./data');
 
 // Route Setup
 app.use('/api/doctor', doctorRoutes);
 app.use('/api/agent', agentRoutes);
 app.use('/api/lab', labRoutes);
 app.use('/api/tests', testRoutes);
-app.use('/api', uploadRoutes); // ✅ Upload and patient routes
+app.use('/api', uploadRoutes);
+app.use('/api/reports', reportRoutes); // ✅ Now live
 
 // Dropdown Data APIs
 app.get('/api/doctors', (req, res) => res.json(data.doctors));
 app.get('/api/agents', (req, res) => res.json(data.agents));
 app.get('/api/tests', (req, res) => res.json(data.tests));
 
-// Home Route
+// Root Route
 app.get('/', (req, res) => {
   res.send('✅ Om Diagnostic Center API is running!');
 });
